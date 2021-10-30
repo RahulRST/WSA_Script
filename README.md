@@ -1,5 +1,5 @@
 ## Step 1 : Download WSA
-	To download WSA, use
+To download WSA, use
 		Link : https://store.rg-adguard.net/
 		ProductID : 9P3395VX91NR
 		Ring : Slow
