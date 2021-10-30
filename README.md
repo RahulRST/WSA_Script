@@ -55,7 +55,9 @@ Then move the gapps zip file to the GApps folder in the Scripts
 In the Ubuntu Terminal, go to the WSA_Scripts folder and the execute 
 the master.sh using the following command
 
+	cd WSA_Scripts
 	sudo ./master.sh
+	
 This script will flash the GApps onto the Windows Subsystem for Android
 After this, move the product.img, system.img, vendor.img and system_ext.img
 files to the WSA Folder from the Images folder in the Scripts.
