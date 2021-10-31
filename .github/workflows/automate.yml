@@ -1,4 +1,4 @@
-name: Magisk
+name: Auto_WSA
 
 on:
   push:
@@ -6,13 +6,13 @@ on:
   workflow_dispatch:
     inputs:
       magisk_apk:
-        description: 'Download link to magisk apk.'
+        description: 'Download link to Magisk App.'
         required: true
-        default: 'https://raw.githubusercontent.com/LSPosed/MagiskOnWSA/main/magisk.apk'
+        default: 'https://raw.githubusercontent.com/RahulRST/WSA_Script/main/magisk.apk'
       gapps_variant:
-        description: 'Variants of gapps. Should be: [none, aroma, super, stock, full, mini, micro, nano, pico, tvstock, tvmini]'
+        description: 'Variants of GApps" Should be: [super, stock, full, mini, micro, nano, pico, tvstock, tvmini]'
         required: true
-        default: 'none'
+        default: 'pico'
 
 jobs:
   build:
@@ -125,7 +125,7 @@ jobs:
               urllib.request.urlretrieve(link, out_file)
           print("done", flush=True)
 
-      - name: Extract GApps and expand images
+      - name: Extract GApps and Expand Images
         if: ${{ github.event.inputs.gapps_variant != 'none' && github.event.inputs.gapps_variant != '' }}
         run: |
           mkdir gapps
@@ -137,11 +137,11 @@ jobs:
           resize2fs ${{ matrix.arch }}/product.img 1024M
           e2fsck -yf ${{ matrix.arch }}/system_ext.img
           resize2fs ${{ matrix.arch }}/system_ext.img 108M
-      - name: Expand vendor
+      - name: Expand Vendor
         run: |
           e2fsck -yf ${{ matrix.arch }}/vendor.img
           resize2fs ${{ matrix.arch }}/vendor.img 320M
-      - name: Mount images
+      - name: Mount Images
         run: |
           sudo mkdir system
           sudo mount -o loop ${{ matrix.arch }}/system.img system
@@ -238,7 +238,7 @@ jobs:
           sudo find system/product/{app,etc,overlay,priv-app} -type f -exec chcon --reference=system/product/etc/permissions/privapp-permissions-venezia.xml {} \;
 
           sudo ./magisk/magiskpolicy --load system/vendor/etc/selinux/precompiled_sepolicy --save system/vendor/etc/selinux/precompiled_sepolicy "allow gmscore_app gmscore_app vsock_socket { create connect write read }" "allow gmscore_app device_config_runtime_native_boot_prop file read"
-      - name: Fix GApps prop
+      - name: Fix GApps Prop
         if: ${{ github.event.inputs.gapps_variant != 'none' && github.event.inputs.gapps_variant != '' }}
         shell: sudo python {0}
         run: |
@@ -267,12 +267,12 @@ jobs:
 
 
           new_props = {
-              ("product", "brand"): "google",
-              ("product", "manufacturer"): "Google",
+              ("product", "brand"): "Samsung",
+              ("product", "manufacturer"): "Samsung",
               ("build", "product"): "redfin",
               ("product", "name"): "redfin",
               ("product", "device"): "redfin",
-              ("product", "model"): "Pixel 5",
+              ("product", "model"): "Galaxy F62",
               ("build", "flavor"): "redfin-user"
           }
 
