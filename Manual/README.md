@@ -6,13 +6,13 @@ To download WSA, use
 		Ring : Slow
 
 ## Step 2 : Install WSL 2
-First go to Optionalfeatures.exe and then enable Windows Subsystem for Linux
+1. First go to Optionalfeatures.exe and then enable Windows Subsystem for Linux
 and Virtual Machine Platform, then reboot to see the changes.
-Then run the wsl2_update.msi to install WSL 2.
+1. Then run the wsl2_update.msi to install WSL 2.
 If it is shown alredy installed, proceed to the next step.
-Finally run the command in Admin PowerShell to set WSL 2 as Default.
+1. Finally run the command in Admin PowerShell to set WSL 2 as Default.
 	
-	wsl --set-default-version 2
+		wsl --set-default-version 2
 
 ## Step 3 : Install Ubuntu and prerequisites
 	
@@ -28,18 +28,16 @@ the following command to install unzip and lzip.
 
 ## Step 4 : Downloads GApps
 Website : https://opengapps.org/
-	If your processor is 64 bit Intel or AMD, then select x86_64.
-	If your processor is ARM64 then select platform as ARM64.
-	Select Android Version as 11.0
-	Variant : Pico.
+1. If your processor is 64 bit Intel or AMD, then select x86_64. If your processor is ARM64 then select platform as ARM64.
+1. Select Android Version as 11.0
+1. Variant : Pico.
 
 ## Step 5 : Extract WSA bundle :
-Rename the previously downloaded .msixbundle to .zip and
-then extract the ARM64 release msix for ARM64 architecture as I mentioned above.
-For Intel or AMD, extract the x64 release msix.
-	Now rename the now extracted .msix to .zip and then extract
+1. Rename the previously downloaded .msixbundle to .zip and then extract the ARM64 release msix for ARM64 architecture as I mentioned above.
+1. For Intel or AMD, extract the x64 release msix.
+1. Now rename the now extracted .msix to .zip and then extract
 the contents in a folder Named "WSA".
-	Delete the files appxblockmap, appxsignature and [content_types] 
+1. Delete the files appxblockmap, appxsignature and [content_types] 
 along with the folder appxmetadata
 
 ## Step 6 : Download WSA Scripts
