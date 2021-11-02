@@ -10,7 +10,7 @@ on:
         required: true
         default: 'https://raw.githubusercontent.com/topjohnwu/magisk-files/canary/app-debug.apk'
       gapps_variant:
-        description: 'Variants of gapps. Should be: [aroma, super, stock, full, mini, micro, nano, pico, tvstock, tvmini]'
+        description: 'Variants of gapps. Should be: [none, aroma, super, stock, full, mini, micro, nano, pico, tvstock, tvmini]'
         required: true
         default: 'pico'
 
