@@ -4,7 +4,7 @@
    ![Fork](https://docs.github.com/assets/images/help/repository/fork_button.jpg)
 ## Go to the **Action** tab in your forked repo
    ![Action Tab](https://docs.github.com/assets/images/help/repository/actions-tab.png)
-## In the left sidebar, click the **Magisk** workflow.
+## In the left sidebar, click the **Automate** workflow.
    ![Workflow](https://docs.github.com/assets/images/actions-select-workflow.png)
 ## Above the list of workflow runs, select **Run workflow**
    ![Run Workflow](https://docs.github.com/assets/images/actions-workflow-dispatch.png)
