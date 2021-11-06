@@ -1,7 +1,5 @@
-Massively by HTML5 UP
-html5up.net | @ajlkn
-Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
-
+# Massively by Rahul
+A website created by Rahul for the use of TECHNO HINTS
 
 This is Massively, a text-heavy, article-oriented design built around a huge background
 image (with a new parallax implementation I'm testing) and scroll effects (powered by
@@ -14,11 +12,8 @@ you can use for pretty much whatever.
 
 (* = not included)
 
-AJ
-aj@lkn.io | @ajlkn
 
-
-Credits:
+# Credits:
 
 	Demo Images:
 		Unsplash (unsplash.com)
