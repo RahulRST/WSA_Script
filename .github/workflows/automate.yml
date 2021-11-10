@@ -1,6 +1,8 @@
 name: Automate
 
 on:
+  push:
+  pull_request:
   workflow_dispatch:
     inputs:
       magisk_apk:
@@ -10,7 +12,11 @@ on:
       gapps_variant:
         description: 'Variants of gapps. Should be: [none, aroma, super, stock, full, mini, micro, nano, pico, tvstock, tvmini]'
         required: true
-        default: 'pico'
+        default: 'none'
+      root_sol:
+        description: 'Root soluction. Should be: [magisk, none]'
+        required: true
+        default: 'magisk'
 
 jobs:
   build:
@@ -147,6 +153,7 @@ jobs:
           sudo mount -o loop ${{ matrix.arch }}/product.img system/product
           sudo mount -o loop ${{ matrix.arch }}/system_ext.img system/system_ext
       - name: Integrate Magisk
+        if: ${{ github.event.inputs.gapps_variant == 'magisk' || github.event.inputs.gapps_variant == '' }}
         run: |
           sudo mkdir system/sbin
           sudo chcon --reference system/init.environ.rc system/sbin
@@ -234,8 +241,8 @@ jobs:
           sudo find system/system/{app,framework,priv-app} -type f -exec chcon --reference=system/system/framework/ext.jar {} \;
           ls gapps/etc/ | xargs -n 1 -I dir sudo find system/system/etc/dir -type f -exec chcon --reference=system/system/etc/permissions {} \;
           sudo find system/product/{app,etc,overlay,priv-app} -type f -exec chcon --reference=system/product/etc/permissions/privapp-permissions-venezia.xml {} \;
-
-          sudo ./magisk/magiskpolicy --load system/vendor/etc/selinux/precompiled_sepolicy --save system/vendor/etc/selinux/precompiled_sepolicy "allow gmscore_app gmscore_app vsock_socket { create connect write read }" "allow gmscore_app device_config_runtime_native_boot_prop file read"
+          chmod +x ./magisk/magiskpolicy
+          sudo ./magisk/magiskpolicy --load system/vendor/etc/selinux/precompiled_sepolicy --save system/vendor/etc/selinux/precompiled_sepolicy "allow gmscore_app gmscore_app vsock_socket { create connect write read }" "allow gmscore_app device_config_runtime_native_boot_prop file read" "allow gmscore_app system_server_tmpfs dir search" "allow gmscore_app system_server_tmpfs file open"
       - name: Fix GApps prop
         if: ${{ github.event.inputs.gapps_variant != 'none' && github.event.inputs.gapps_variant != '' }}
         shell: sudo python {0}
@@ -351,11 +358,20 @@ jobs:
       - name: Generate artifact name
         run: |
           variant="${{ github.event.inputs.gapps_variant }}"
-          if [[ "$variant" = "none" || "$variant" = "" ]]; then
-            echo "artifact_name=WSA-with-Magisk-NoGApps_${{ matrix.arch }}" >> $GITHUB_ENV
+          root="${{ github.event.inputs.root_sol }}"
+          if [[ "$root" = "none" ]]; then
+            name1=""
+          elif [[ "$root" = "" ]]; then
+            name1="-with-magisk"
           else
-            echo "artifact_name=WSA-with-Magisk-GApps-${variant}_${{ matrix.arch }}" >> $GITHUB_ENV
+            name1="-with-${root}"
           fi
+          if [[ "$variant" = "none" || "$variant" = "" ]]; then
+            name2="-NoGApps"
+          else
+            name2="-GApps-${variant}"
+          fi
+          echo "artifact_name=WSA${name1}${name2}_${{ matrix.arch }}" >> $GITHUB_ENV
       - name: Upload WSA
         uses: actions/upload-artifact@v2
         with:
