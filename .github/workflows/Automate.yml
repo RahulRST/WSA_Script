@@ -1,15 +1,9 @@
-name: Build WSA
+name: Build WSA (mod)
 on:
-  push:
-    paths-ignore:
-      - 'README.md'
-  pull_request:
-    paths-ignore:
-      - 'README.md'
   workflow_dispatch:
     inputs:
       arch:
-        description: "Build arch"
+        description: "Build Arch"
         required: true
         default: "x64 & arm64"
         type: choice
@@ -18,7 +12,7 @@ on:
         - arm64
         - x64 & arm64
       release_type:
-        description: "WSA release type"
+        description: "WSA Release Type"
         required: true
         default: "retail"
         type: choice
@@ -28,7 +22,7 @@ on:
         - insider slow
         - insider fast
       magisk_apk:
-        description: "Magisk version"
+        description: "Magisk Version"
         required: true
         default: "stable"
         type: choice
@@ -36,8 +30,9 @@ on:
         - stable
         - beta
         - canary
+        - debug
       gapps_variant:
-        description: "Variants of gapps"
+        description: "Variants of GApps"
         required: true
         default: "none"
         type: choice
@@ -53,7 +48,7 @@ on:
         - tvstock
         - tvmini
       root_sol:
-        description: "Root solution"
+        description: "Root Solution"
         required: true
         default: "magisk"
         type: choice
@@ -149,9 +144,13 @@ jobs:
                           print(f"unzipping to {zip_name}", flush=True)
                           zip.extract(f)
                           ver_no = zip_name.split("_")
-                          ver = ver_no[1]
+                          long_ver = ver_no[1]
+                          ver=long_ver.split(".")
+                          main_ver=ver[0]
                           with open(os.environ['GITHUB_ENV'], 'a') as g:
-                              g.write(f'WSA_VER={ver}\n')
+                              g.write(f'WSA_VER={long_ver}\n')
+                          with open(os.environ['GITHUB_ENV'], 'a') as g:
+                              g.write(f'WSA_MAIN_VER={main_ver}\n')
                           rel = ver_no[3].split(".")
                           rell = str(rel[0])
                           with open(os.environ['GITHUB_ENV'], 'a') as g:
@@ -188,7 +187,7 @@ jobs:
 
           if not magisk_apk:
               magisk_apk = "stable"
-          if magisk_apk == "stable" or magisk_apk == "beta" or magisk_apk == "canary":
+          if magisk_apk == "stable" or magisk_apk == "beta" or magisk_apk == "canary" or magisk_apk == "debug":
               magisk_apk = json.loads(requests.get(f"https://github.com/topjohnwu/magisk-files/raw/master/{magisk_apk}.json").content)['magisk']['link']
               
           out_file = "magisk.zip"
@@ -239,16 +238,21 @@ jobs:
           import re
 
           arch = "${{ matrix.arch }}"
-          variant = "${{ github.event.inputs.gapps_variant }}"
+          # TODO: if it's an Android 12.1 base WSA keep it pico since other variants of opengapps are unable to boot successfully
+          variant = "${{ github.event.inputs.gapps_variant }}" if int("${{ env.WSA_MAIN_VER }}") < 2204 else "pico"
           abi_map = {"x64" : "x86_64", "arm64": "arm64"}
+          # TODO: keep it 11.0 since opengapps does not support 12+ yet
+          # As soon as opengapps is available for 12+, we need to get the sdk/release from build.prop and
+          # download the corresponding version
+          release = "11.0"
           try:
               res = requests.get(f"https://api.opengapps.org/list")
               j = json.loads(res.content)
-              link = {i["name"]: i for i in j["archs"][abi_map[arch]]["apis"]["11.0"]["variants"]}[variant]["zip"]
+              link = {i["name"]: i for i in j["archs"][abi_map[arch]]["apis"][release]["variants"]}[variant]["zip"]
           except Exception:
               print("Failed to fetch from opengapps api, fallbacking to sourceforge rss...")
               res = requests.get(f'https://sourceforge.net/projects/opengapps/rss?path=/{abi_map[arch]}&limit=100')
-              link = re.search(f'https://.*{abi_map[arch]}/.*{variant}.*\.zip/download', res.text).group().replace('.zip/download', '.zip').replace('sourceforge.net/projects/opengapps/files', 'downloads.sourceforge.net/project/opengapps')
+              link = re.search(f'https://.*{abi_map[arch]}/.*{release}.*{variant}.*\.zip/download', res.text).group().replace('.zip/download', '.zip').replace('sourceforge.net/projects/opengapps/files', 'downloads.sourceforge.net/project/opengapps')
 
           print(f"downloading link: {link}", flush=True)
 
@@ -264,16 +268,27 @@ jobs:
           mkdir gapps
           unzip -p gapps.zip {Core,GApps}/'*.lz' | tar --lzip -C gapps -xvf - -i --strip-components=2 --exclude='setupwizardtablet-x86_64' --exclude='packageinstallergoogle-all' --exclude='speech-common' --exclude='markup-lib-arm' --exclude='markup-lib-arm64' --exclude='markup-all' --exclude='setupwizarddefault-x86_64' --exclude='pixellauncher-all' --exclude='pixellauncher-common'
 
-          e2fsck -yf ${{ matrix.arch }}/system.img
-          resize2fs ${{ matrix.arch }}/system.img $(( $(du -sB512 gapps | cut -f1) + $(du -sB512 ${{ matrix.arch }}/system.img | cut -f1) ))s
+          # TODO: calculate the size dynamically for better compatibility
           e2fsck -yf ${{ matrix.arch }}/product.img
           resize2fs ${{ matrix.arch }}/product.img 1024M
           e2fsck -yf ${{ matrix.arch }}/system_ext.img
-          resize2fs ${{ matrix.arch }}/system_ext.img 108M
-      - name: Expand vendor
+          resize2fs ${{ matrix.arch }}/system_ext.img 200M
+      - name: Expand vendor and system
         run: |
+          e2fsck -yf ${{ matrix.arch }}/system.img
+          system_size=$(( $(du -sB512 ${{ matrix.arch }}/system.img | cut -f1) + 20000 ))
+          if [ -d gapps ]; then
+            system_size=$(( $system_size + $(du -sB512 gapps | cut -f1) ))
+          fi
+          if [ -d magisk ]; then
+            system_size=$(( $system_size +$(du -sB512 magisk | cut -f1) ))
+          fi
+          if [ -f magisk.zip ]; then
+            system_size=$(( $system_size +$(du -sB512 magisk.zip | cut -f1) ))
+          fi
+          resize2fs ${{ matrix.arch }}/system.img "$system_size"s
           e2fsck -yf ${{ matrix.arch }}/vendor.img
-          resize2fs ${{ matrix.arch }}/vendor.img 320M
+          resize2fs ${{ matrix.arch }}/vendor.img 400M
       - name: Mount images
         run: |
           sudo mkdir system
@@ -425,7 +440,7 @@ jobs:
         run: |
           from __future__ import annotations
           from io import TextIOWrapper
-          from os import system
+          from os import system, path
           from typing import OrderedDict
 
 
@@ -467,6 +482,9 @@ jobs:
 
 
           def fix_prop(sec, prop):
+              if not path.exists(prop):
+                  return
+
               print(f"fixing {prop}", flush=True)
               with open(prop, 'r') as f:
                   p = Prop(f)
@@ -618,6 +636,11 @@ jobs:
           if [[ "$variant" = "none" || "$variant" = "" ]]; then
             name2="-NoGApps"
           else
+            if [[ ${{ env.WSA_MAIN_VER }} -ge 2204 && "$variant" != "pico" ]]; then
+              echo "### MagiskOnWSA" >> $GITHUB_STEP_SUMMARY
+              echo ":warning: Since OpenGapps doesn't officially support Android 12.1 yet, lock the variant to pico!"  >> $GITHUB_STEP_SUMMARY
+              variant="pico"
+            fi
             name2="-GApps-${variant}"
           fi
           echo "artifact_name=WSA${name1}${name2}_${{ env.WSA_VER }}_${{ matrix.arch }}_${{ env.WSA_REL }}" >> $GITHUB_ENV
@@ -626,3 +649,10 @@ jobs:
         with:
           name: ${{ env.artifact_name }}
           path: "./${{ matrix.arch }}/*"
+      - name: Delete workflow runs
+        uses: Mattraks/delete-workflow-runs@v2
+        with:
+          token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          retain_days: 0
+          keep_minimum_runs: 0
