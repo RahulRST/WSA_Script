@@ -91,7 +91,7 @@ jobs:
             core.setOutput("matrix",JSON.stringify(matrix));
 
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     needs: matrix
     strategy:
       matrix: ${{fromJson(needs.matrix.outputs.matrix)}}
@@ -383,11 +383,9 @@ jobs:
           sudo patchelf --replace-needed libm.so "${HOME}/libm.so" ./magiskpolicy || true
           sudo patchelf --replace-needed libdl.so "${HOME}/libdl.so" ./magiskpolicy || true
           sudo patchelf --set-interpreter "${HOME}/linker64" ./magiskpolicy || true
-          sudo chown root:root ./magiskpolicy
-          sudo chmod 777 ./magiskpolicy
+          chmod 777 ./magiskpolicy
           echo '/dev/wsa-magisk(/.*)?    u:object_r:magisk_file:s0' | sudo tee -a system/vendor/etc/selinux/vendor_file_contexts
           echo '/data/adb/magisk(/.*)?   u:object_r:magisk_file:s0' | sudo tee -a system/vendor/etc/selinux/vendor_file_contexts
-          mount
           sudo ./magiskpolicy --load system/vendor/etc/selinux/precompiled_sepolicy --save system/vendor/etc/selinux/precompiled_sepolicy --magisk "allow * magisk_file lnk_file *"
           sudo tee -a system/system/etc/init/hw/init.rc <<EOF
 
