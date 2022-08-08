@@ -1,4 +1,4 @@
-name: Build WSA
+name: Android Build Workflow
 description: This is a script build on the motive of Creating Rooted Android Subsystems
 on:
   workflow_dispatch:
