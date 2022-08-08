@@ -347,10 +347,10 @@ jobs:
       - name: Mount images
         run: |
           sudo mkdir system
-          sudo mount -o loop ${{ matrix.arch }}/system.img system
-          sudo mount -o loop ${{ matrix.arch }}/vendor.img system/vendor
-          sudo mount -o loop ${{ matrix.arch }}/product.img system/product
-          sudo mount -o loop ${{ matrix.arch }}/system_ext.img system/system_ext
+          sudo mount -o loop,exec ${{ matrix.arch }}/system.img system
+          sudo mount -o loop,exec ${{ matrix.arch }}/vendor.img system/vendor
+          sudo mount -o loop,exec ${{ matrix.arch }}/product.img system/product
+          sudo mount -o loop,exec ${{ matrix.arch }}/system_ext.img system/system_ext
       - name: Remove Amazon AppStore
         if: ${{ github.event.inputs.remove_amazon == 'remove' }}
         run: |
@@ -387,9 +387,7 @@ jobs:
           sudo chmod 777 ./magiskpolicy
           echo '/dev/wsa-magisk(/.*)?    u:object_r:magisk_file:s0' | sudo tee -a system/vendor/etc/selinux/vendor_file_contexts
           echo '/data/adb/magisk(/.*)?   u:object_r:magisk_file:s0' | sudo tee -a system/vendor/etc/selinux/vendor_file_contexts
-          pwd
-          # mount
-          getfacl ./magiskpolicy
+          mount
           sudo ./magiskpolicy --load system/vendor/etc/selinux/precompiled_sepolicy --save system/vendor/etc/selinux/precompiled_sepolicy --magisk "allow * magisk_file lnk_file *"
           sudo tee -a system/system/etc/init/hw/init.rc <<EOF
 
